@@ -14,6 +14,8 @@ public class Ball : MonoBehaviour {
     public Text scoreRight;
     public GameObject paddleRight;
     public GameObject paddleLeft;
+    public bool end = true;
+    public float timePassed = 0;
 
     // Use this for initialization
     void Start () {
@@ -21,31 +23,45 @@ public class Ball : MonoBehaviour {
         rb.velocity = Vector2.right * speed;
     }
 
+    private void Update() {
+        if (end && timePassed <= 2) {
+            gameObject.transform.position = new Vector3(0.0f, 0.0f, 0.0f);
+            timePassed += Time.deltaTime;
+        } else if (end && timePassed >= 2) {
+            timePassed = 0;
+            end = false;
+        }
+    }
+
     private void OnCollisionEnter2D(Collision2D collision) {
 
         if (collision.collider.name.Contains("paddle")) {
             HandlePaddleHit(collision);
             SoundManager.instance.Play(SoundManager.instance.hitPaddle);
+            end = false;
         }
 
         if (collision.collider.name.Equals("wall_left")) {
             IncreaseScore(scoreRight);
             ResetPosition(paddleRight);
             SoundManager.instance.Play(SoundManager.instance.goalBloop);
+            end = true;
 
         } else if (collision.collider.name.Equals("wall_right")) {
             IncreaseScore(scoreLeft);
             ResetPosition(paddleLeft);
             SoundManager.instance.Play(SoundManager.instance.goalBloop);
+            end = true;
         }
 
         if (collision.collider.name.Equals("wall_top") || collision.collider.name.Equals("wall_bottom")) {
             SoundManager.instance.Play(SoundManager.instance.wallBloop);
+            end = false;
         }
     }
     private void ResetPosition(GameObject paddle) {
         gameObject.transform.position = new Vector3(0.0f, 0.0f, 0.0f);
-        Thread.Sleep(50);
+        rb.velocity = new Vector2(0, 0);
         rb.velocity = (paddle.transform.position - gameObject.transform.position * speed);
     }
 
@@ -69,7 +85,6 @@ public class Ball : MonoBehaviour {
     private float GetPaddleHitPosition(Vector3 ballPosition, Vector3 paddlePosition, float y) {
         return (ballPosition.y - paddlePosition.y) / y;
     }
-
 
     public Boolean isEnded() {
         if (int.Parse(scoreLeft.text) == 10 || int.Parse(scoreRight.text) == 10)
